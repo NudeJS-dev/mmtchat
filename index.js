@@ -1,6 +1,6 @@
-import { eventSource, event_types, setEditedMessageId } from "../../../script.js";
-import { getContext } from "../../extensions.js";
-import { delay } from '../../utils.js';
+import { eventSource, event_types, setEditedMessageId } from "../../../../script.js";
+import { getContext } from "../../../extensions.js";
+import { delay } from '../../../utils.js';
 
 const MMT_HOST = "121.42.225.6";
 // const MMT_HOST = "127.0.0.1";

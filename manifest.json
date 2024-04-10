@@ -4,7 +4,6 @@
     "requires": [],
     "optional": [],
     "js": "index.js",
-    "css": "",
     "author": "NudeJS",
     "version": "1.0.0",
     "auto_update": true
