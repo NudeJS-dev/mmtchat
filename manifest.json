@@ -1,0 +1,11 @@
+{
+    "display_name": "MMTChat",
+    "loading_order": 100,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "",
+    "author": "NudeJS",
+    "version": "1.0.0",
+    "auto_update": true
+}
