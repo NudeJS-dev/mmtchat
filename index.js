@@ -29,13 +29,7 @@ function GetOpenAIInfo()
 {
     let reverseProxy = $("#openai_reverse_proxy").val();
     let proxyPassword = $("#openai_proxy_password").val();
-    if(reverseProxy.indexOf(MMT_HOST) > 0)
-    {
-        return { IsMMT: true, UserKey: proxyPassword };
-    }
-    let customApiUrl = $("#custom_api_url_text").val();
-    let apiKeyCustom = $("#api_key_custom").val();
-    return { IsMMT: customApiUrl.indexOf(MMT_HOST) > 0, UserKey: apiKeyCustom };
+    return { IsMMT: reverseProxy.indexOf(MMT_HOST) > 0, UserKey: proxyPassword };
 }
 
 async function handleGenerationStart(type, options, dryRun)
