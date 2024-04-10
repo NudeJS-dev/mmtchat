@@ -53,6 +53,7 @@ async function handleReceivedMessage(messageId)
 {
     const context = getContext();
     const message = context.chat[messageId - 1];
+    character.description = character.data.description;
     if(message && message.mes == '-roll')
     {
         setTimeout(async () => {
