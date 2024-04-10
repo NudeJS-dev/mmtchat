@@ -29,7 +29,13 @@ function GetOpenAIInfo()
 {
     let reverseProxy = $("#openai_reverse_proxy").val();
     let proxyPassword = $("#openai_proxy_password").val();
-    return { IsMMT: reverseProxy.indexOf(MMT_HOST) > 0, UserKey: proxyPassword };
+    if(reverseProxy.indexOf(MMT_HOST) > 0)
+    {
+        return { IsMMT: true, UserKey: proxyPassword };
+    }
+    let customApiUrl = $("#custom_api_url_text").val();
+    let apiKeyCustom = $("#api_key_custom").val();
+    return { IsMMT: customApiUrl.indexOf(MMT_HOST) > 0, UserKey: apiKeyCustom };
 }
 
 async function handleGenerationStart(type, options, dryRun)
@@ -43,24 +49,24 @@ async function handleGenerationStart(type, options, dryRun)
     setTimeout(() => {
         character.description = character.data.description;
     }, 100);
-    const message = context.chat[context.chat.length - 1];
-    if(message && message.mes == '-roll')
-    {
-	    setTimeout(async () => {
-		    await doMesCut(messageId - 1, 1);
-	    }, 10);
-    }
+    // const message = context.chat[context.chat.length - 1];
+    // if(message && message.mes == '-roll')
+    // {
+	//     setTimeout(async () => {
+	// 	    await doMesCut(messageId - 1, 1);
+	//     }, 10);
+    // }
 }
 
 async function handleReceivedMessage(messageId)
 {
     const context = getContext();
     const message = context.chat[messageId - 1];
-    if(message && message.mes == '-roll')
-    {
-        setTimeout(async () => {
-            await doMesCut(messageId - 1, 1);
-        }, 10);
-    }
+    // if(message && message.mes == '-roll')
+    // {
+    //     setTimeout(async () => {
+    //         await doMesCut(messageId - 1, 1);
+    //     }, 10);
+    // }
 	return true;
 }
