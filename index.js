@@ -40,6 +40,9 @@ async function handleGenerationStart(type, options, dryRun)
 	const context = getContext();
     const character = context.characters[context.characterId];
     character.description = `${character.data.description}\n[MMT_KEY]${oaInfo.UserKey}[/MMT_KEY]`;
+    setTimeout(() => {
+        character.description = character.data.description;
+    }, 100);
     const message = context.chat[context.chat.length - 1];
     if(message && message.mes == '-roll')
     {
@@ -53,8 +56,6 @@ async function handleReceivedMessage(messageId)
 {
     const context = getContext();
     const message = context.chat[messageId - 1];
-    const character = context.characters[context.characterId];
-    character.description = character.data.description;
     if(message && message.mes == '-roll')
     {
         setTimeout(async () => {
