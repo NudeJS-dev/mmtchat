@@ -53,6 +53,7 @@ async function handleReceivedMessage(messageId)
 {
     const context = getContext();
     const message = context.chat[messageId - 1];
+    const character = context.characters[context.characterId];
     character.description = character.data.description;
     if(message && message.mes == '-roll')
     {
