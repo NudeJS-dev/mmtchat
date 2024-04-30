@@ -1,112 +1,92 @@
-import { eventSource, event_types, setEditedMessageId } from "../../../../script.js";
+import { eventSource, event_types } from "../../../../script.js";
 import { getContext } from "../../../extensions.js";
-import { delay } from '../../../utils.js';
 
-const MMT_HOST = "chat.maomaotou.online";
-// const MMT_HOST = "127.0.0.1";
+import { MMTUtils } from "./mmtutils.js";
+import { MMTCallbacks } from "./mmtcallbacks.js";
 
+eventSource.on(event_types.CHAT_CHANGED, handleChatChanged);
 eventSource.on(event_types.MESSAGE_SENT, handleMessageSent);
 eventSource.on(event_types.GENERATION_STARTED, handleGenerationStart);
 eventSource.on(event_types.MESSAGE_RECEIVED, handleReceivedMessage);
 
-async function doMesCut(start, count)
+function handleChatChanged()
 {
-	for (let i = 0; i < count; i++)
-	{
-        let done = false;
-        let mesToCut = $('#chat').find(`.mes[mesid=${start}]`);
-        setEditedMessageId(start);
-        eventSource.once(event_types.MESSAGE_DELETED, () => {
-            done = true;
-        });
-        mesToCut.find('.mes_edit_delete').trigger('click', { fromSlashCommand: true });
-        while (!done) {
-            await delay(1);
-        }
-    }
-}
-
-function GetOpenAIInfo()
-{
-    let reverseProxy = $("#openai_reverse_proxy").val();
-    let proxyPassword = $("#openai_proxy_password").val();
-    return { IsMMT: reverseProxy.indexOf(MMT_HOST) > 0, UserKey: proxyPassword };
-}
-
-function OnBefore_Switch_Send(message, cookieArr)
-{
-    let authorizationCookie = cookieArr.find(cookieString => cookieString.indexOf('authorization=') >= 0);
-    let uniqueIdCookie = cookieArr.find(cookieString => cookieString.indexOf('uniqueId=') >= 0);
-    if(!authorizationCookie || !uniqueIdCookie)
+    const oaInfo = MMTUtils.GetOpenAIInfo();
+    if(!oaInfo.IsMMT) return;
+    const context = getContext();
+    const character = context.characters[context.characterId];
+    try
     {
-        message.mes = "-switch invalid_authorization";
-        return;
+        let charData = JSON.parse(character.json_data);
+        MMTCallbacks.OnSelectCharacter(charData);
     }
-    authorizationCookie = authorizationCookie.substring(authorizationCookie.indexOf('authorization=') + 14);
-    let tailIndex = authorizationCookie.indexOf(';');
-    let authorization = authorizationCookie.substring(0, tailIndex);
-    uniqueIdCookie = uniqueIdCookie.substring(uniqueIdCookie.indexOf('uniqueId=') + 9);
-    tailIndex = uniqueIdCookie.indexOf(';');
-    let uniqueId = uniqueIdCookie.substring(0, tailIndex);
-    message.mes = `-switch ${uniqueId} ${authorization}`;
-}
-
-function OnBeforeCommandMessageSend(message)
-{
-    let commandText = message.mes.substring(1);
-    let commandParts = commandText.split(' ');
-    let cmd = commandParts[0];
-    let args = commandParts.slice(1);
-    switch(cmd)
-    {
-        case 'switch':
-            {
-                OnBefore_Switch_Send(message, args);
-                break;
-            }
-    }
+    catch(err) { throw err; }
 }
 
 async function handleMessageSent(index)
 {
-    const oaInfo = GetOpenAIInfo();
+    const oaInfo = MMTUtils.GetOpenAIInfo();
     if(!oaInfo.IsMMT) return;
     const context = getContext();
-    const character = context.characters[context.characterId];
-    character.description = `${character.data.description}\n[MMT_KEY]${oaInfo.UserKey}[/MMT_KEY]`;
-    setTimeout(() => {
-        character.description = character.data.description;
-    }, 100);
     const message = context.chat[index];
-    if(message && !message.op && message.is_user && message.mes.startsWith('-'))
+    if(message)
     {
-        OnBeforeCommandMessageSend(message);
-        message.op = true;
+        MMTUtils.CleanHiddenInfo(message);
+        MMTUtils.AddMMTInfoToMessage(message);
+    }
+    if(message && message.is_user)
+    {
+        if(message.mes.startsWith('-'))
+        {
+            MMTCallbacks.OnBeforeCommandMessageSend(message);
+            return;
+        }
+        MMTCallbacks.OnBeforeUserMessageSend(message);
     }
 }
 
-async function handleGenerationStart(type, options, dryRun)
+function handleGenerationStart(type, options, dryRun)
 {
     if(dryRun) return;
-    const oaInfo = GetOpenAIInfo();
+    const oaInfo = MMTUtils.GetOpenAIInfo();
     if(!oaInfo.IsMMT) return;
 	const context = getContext();
-    const character = context.characters[context.characterId];
-    character.description = `${character.data.description}\n[MMT_KEY]${oaInfo.UserKey}[/MMT_KEY]`;
-    setTimeout(() => {
-        character.description = character.data.description;
-    }, 100);
-    const message = context.chat[context.chat.length - 1];
-    if(message && !message.op && message.is_user && message.mes.startsWith('-'))
+    if(context.chat.length < 2) return;
+    const LastMesage = context.chat[context.chat.length - 1];
+    const PrevMessage = context.chat[context.chat.length - 2];
+    let message = null;
+    if(LastMesage.is_user) message = LastMesage;
+    if(!LastMesage.is_user && PrevMessage.is_user) message = PrevMessage;
+    if(message)
     {
-        OnBeforeCommandMessageSend(message);
-        message.op = true;
+        MMTUtils.CleanHiddenInfo(message);
+        MMTUtils.AddMMTInfoToMessage(message);
+    }
+    if(message && message.is_user)
+    {
+        if(message.mes.startsWith('-'))
+        {
+            MMTCallbacks.OnBeforeCommandMessageSend(message);
+            return;
+        }
+        MMTCallbacks.OnBeforeUserMessageSend(message);
     }
 }
 
-async function handleReceivedMessage(messageId)
+function handleReceivedMessage(messageId)
 {
     const context = getContext();
-    context.chat.map(message => message.mes.startsWith('-') && (message.mes = `[MMT]${message.mes.substring(1)}`));
+    context.chat.map((message, index) => {
+        if(message.mes.startsWith('-'))
+        {
+            message.mes = `[MMT]${message.mes.substring(1)}`;
+        }
+        MMTUtils.CleanHiddenInfo(message);
+    });
+    let receivedMesText = context.chat[messageId].mes;
+    // if(receivedMesText.indexOf('<ERAMode>') > 0)
+    // {
+    //     updateMesInPage(messageId, "<h>this is a test</h>");
+    // }
 	return true;
 }
