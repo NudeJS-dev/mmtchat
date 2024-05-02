@@ -1,4 +1,3 @@
-import { getContext } from "../../../../extensions.js";
 import { MMTUtils } from "../mmtutils.js";
 
 export class EraMode
@@ -15,6 +14,11 @@ export class EraMode
     Setup(charData)
     {
         this.firstMes = charData.first_mes.replaceAll('{{char}}', charData.name).replaceAll('{{user}}', MMTUtils.GetUserName());
+        let tailIndex = this.firstMes.indexOf('<!--');
+        if(tailIndex > -1)
+        {
+            this.firstMes = this.firstMes.substring(0, tailIndex);
+        }
         let charDesc = charData.description;
         let attrHead = charDesc.indexOf('<Attributes>');
         let attrTail = charDesc.indexOf('</Attributes>');
@@ -48,13 +52,31 @@ export class EraMode
         this.MMT_UI.SetupAttributeWindow(this.attributes, this.particulars);
     }
 
-    GenerateEraData()
+    GatherEraHistory(isRoll)
+    {
+        let history = [ `Assistant:\n${this.firstMes}` ];
+        let allChat = MMTUtils.GetChat();
+        allChat.map((message, index) => {
+            if(index > 0 && index < allChat.length - 1)
+            {
+                if(isRoll && index == allChat.length - 2) return;
+                if(message.is_user)
+                {
+                    history.push(`Human:\n${message.mes}`);
+                    return;
+                }
+                let storyText = MMTUtils.GetTagContent('ERA_Story', message.mes);
+                if(storyText.length > 0) history.push(`Assistant:\n${storyText}`);
+            }
+        });
+        return history;
+    }
+
+    GenerateEraData(isRoll)
     {
         let eraData = {};
         let saveData = MMTUtils.GetSaveDataInChat0();
-        if(!saveData.history) saveData.history = [];
-        if(saveData.history.length < 1) saveData.history.push(this.firstMes);
-        eraData.history = saveData.history;
+        eraData.history = this.GatherEraHistory(isRoll);
         if(!saveData.attributes) saveData.attributes = {};
         eraData.statusText = '';
         for(let attrGroup of this.attributes)
@@ -81,9 +103,40 @@ export class EraMode
         return eraData;
     }
 
-    OnBeforeUserMessageSend(message)
+    OnBeforeUserMessageSend(message, isRoll)
     {
-        let eraData = this.GenerateEraData();
+        let eraData = this.GenerateEraData(isRoll);
         MMTUtils.AddHiddenInfoToMessage(message, eraData);
+    }
+
+    OnReceivedMessage(messageId, message)
+    {
+        let originMes = message.mes;
+        let eraModeText = MMTUtils.GetTagContent('ERAMode', originMes);
+        if(eraModeText.length < 1) return;
+        let storyText = MMTUtils.GetTagContent('ERA_Assistant_Response', eraModeText);
+        let saveData = MMTUtils.GetSaveDataInChat0();
+        let attrChangeText = MMTUtils.GetTagContent('ERA_Assistant_Attribute_Change', eraModeText).replaceAll('\r', '').replaceAll('\n', '');
+        let attrs = [];
+        const regex = /<Name>(.*?)<\/Name><Change>(.*?)<\/Change>/gi;
+        let match;
+        while ((match = regex.exec(attrChangeText)) !== null)
+        {
+            const name = match[1].trim();
+            const value = parseInt(match[2].trim());
+            saveData.attributes[name] += value;
+            attrs.push({ Name: name, Value: saveData.attributes[name] });
+        }
+        let particulars = [];
+        let particularText = MMTUtils.GetTagContent('ERA_Particulars_Change', eraModeText).replaceAll('\r', '').replaceAll('\n', '');
+        while ((match = regex.exec(particularText)) !== null)
+        {
+            const name = match[1].trim();
+            const value = match[2].trim();
+            particulars.push({ Name: name, Value: value });
+        }
+        MMTUtils.SetSaveDataInChat0(saveData);
+        MMTUtils.UpdateMesInPage(messageId, `<ERA_Story>\n${storyText}\n</ERA_Story>`);
+        this.MMT_UI.UpdateAttributeWindow(attrs, particulars);
     }
 }

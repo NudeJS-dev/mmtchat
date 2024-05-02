@@ -17,6 +17,7 @@ export class MMTMode
 
     OnSelectCharacter(charData)
     {
+        this.CurrentMode = MODE_NONE;
         let charDesc = charData.description;
         let IsEraMode = charDesc.startsWith('<MMT-ERA-MODE>') && charDesc.endsWith('</MMT-ERA-MODE>');
         MMT_UI.SetVisible('AttributeWindow', IsEraMode);
@@ -28,9 +29,15 @@ export class MMTMode
         }
     }
 
-    OnBeforeUserMessageSend(message)
+    OnBeforeUserMessageSend(message, isRoll)
     {
         if(this.CurrentMode == MODE_NONE) return;
-        if(this.eraMode) this.eraMode.OnBeforeUserMessageSend(message);
+        if(this.eraMode) this.eraMode.OnBeforeUserMessageSend(message, isRoll);
+    }
+
+    OnReceivedMessage(messageId, message)
+    {
+        if(this.CurrentMode == MODE_NONE) return;
+        if(this.eraMode) this.eraMode.OnReceivedMessage(messageId, message);
     }
 }

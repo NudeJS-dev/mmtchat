@@ -44,7 +44,12 @@ MMTCallbacks.OnBeforeCommandMessageSend = function(message)
     }
 }
 
-MMTCallbacks.OnBeforeUserMessageSend = function(message)
+MMTCallbacks.OnBeforeUserMessageSend = function(message, isRoll)
 {
-    MMT_Mode.OnBeforeUserMessageSend(message);
+    MMT_Mode.OnBeforeUserMessageSend(message, isRoll);
+}
+
+MMTCallbacks.OnReceivedMessage = function(messageId, message)
+{
+    MMT_Mode.OnReceivedMessage(messageId, message);
 }

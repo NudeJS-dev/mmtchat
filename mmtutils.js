@@ -66,7 +66,7 @@ MMTUtils.SetSaveDataInChat0 = function(saveData)
         message0.mes = `${message0.mes}\n<!-- SaveData ${JSON.stringify(saveData)} -->`;
         return;
     }
-    let plainMes = message0.mes.substring(0, saveIdx);
+    let plainMes = message0.mes.substring(0, saveIdx).trim();
     message0.mes = `${plainMes}\n<!-- SaveData ${JSON.stringify(saveData)} -->`;
 }
 
@@ -96,7 +96,7 @@ MMTUtils.AddHiddenInfoToMessage = function(message, infoData)
     let hiddenIdx = message.mes.indexOf('<!-- HiddenInfo');
     if(hiddenIdx > -1)
     {
-        plainMes = message.mes.substring(0, hiddenIdx);
+        plainMes = message.mes.substring(0, hiddenIdx).trim();
         hiddenInfoText = message.mes.substring(hiddenIdx + 15);
         let tailIdx = hiddenInfoText.indexOf('-->');
         hiddenInfoText = hiddenInfoText.substring(0, tailIdx).trim();
@@ -120,4 +120,27 @@ MMTUtils.CleanHiddenInfo = function(message)
     {
         message.mes = message.mes.substring(0, hiddenIndex).trim();
     }
+}
+
+MMTUtils.GetTagContent = function(tag, content)
+{
+    let idx1 = content.indexOf(`<${tag}>`);
+    let idx2 = content.indexOf(`</${tag}>`);
+    if(idx1 < 0 || idx2 < 0 || idx1 >= idx2) return '';
+    return content.substring(idx1 + tag.length + 2, idx2).trim();
+}
+
+MMTUtils.GetChat = function()
+{
+    const context = getContext();
+    if(!context || !context.chat || context.chat.length < 1) return [];
+    return context.chat;
+}
+
+MMTUtils.GetChatMessage = function(messageId)
+{
+    if(messageId < 0) return null;
+    const context = getContext();
+    if(!context || !context.chat || context.chat.length < 1) return null;
+    return context.chat[messageId];
 }

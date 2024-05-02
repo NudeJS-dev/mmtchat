@@ -1,13 +1,17 @@
 import { eventSource, event_types } from "../../../../script.js";
 import { getContext } from "../../../extensions.js";
+import { delay } from '../../../utils.js';
 
 import { MMTUtils } from "./mmtutils.js";
+import { MMTSettings } from "./settings/mmt_settings.js";
 import { MMTCallbacks } from "./mmtcallbacks.js";
 
 eventSource.on(event_types.CHAT_CHANGED, handleChatChanged);
 eventSource.on(event_types.MESSAGE_SENT, handleMessageSent);
 eventSource.on(event_types.GENERATION_STARTED, handleGenerationStart);
 eventSource.on(event_types.MESSAGE_RECEIVED, handleReceivedMessage);
+
+await MMTSettings.Ins().Setup();
 
 function handleChatChanged()
 {
@@ -23,7 +27,7 @@ function handleChatChanged()
     catch(err) { throw err; }
 }
 
-async function handleMessageSent(index)
+function handleMessageSent(index)
 {
     const oaInfo = MMTUtils.GetOpenAIInfo();
     if(!oaInfo.IsMMT) return;
@@ -41,13 +45,15 @@ async function handleMessageSent(index)
             MMTCallbacks.OnBeforeCommandMessageSend(message);
             return;
         }
-        MMTCallbacks.OnBeforeUserMessageSend(message);
+        MMTCallbacks.OnBeforeUserMessageSend(message, false);
     }
 }
 
 function handleGenerationStart(type, options, dryRun)
 {
     if(dryRun) return;
+    let inputText = $('#send_textarea').val();
+    if(inputText.length > 0) return;
     const oaInfo = MMTUtils.GetOpenAIInfo();
     if(!oaInfo.IsMMT) return;
 	const context = getContext();
@@ -55,8 +61,13 @@ function handleGenerationStart(type, options, dryRun)
     const LastMesage = context.chat[context.chat.length - 1];
     const PrevMessage = context.chat[context.chat.length - 2];
     let message = null;
+    let isRoll = false;
     if(LastMesage.is_user) message = LastMesage;
-    if(!LastMesage.is_user && PrevMessage.is_user) message = PrevMessage;
+    if(!LastMesage.is_user && PrevMessage.is_user)
+    {
+        isRoll = true;
+        message = PrevMessage;
+    }
     if(message)
     {
         MMTUtils.CleanHiddenInfo(message);
@@ -69,7 +80,7 @@ function handleGenerationStart(type, options, dryRun)
             MMTCallbacks.OnBeforeCommandMessageSend(message);
             return;
         }
-        MMTCallbacks.OnBeforeUserMessageSend(message);
+        MMTCallbacks.OnBeforeUserMessageSend(message, isRoll);
     }
 }
 
@@ -83,10 +94,6 @@ function handleReceivedMessage(messageId)
         }
         MMTUtils.CleanHiddenInfo(message);
     });
-    let receivedMesText = context.chat[messageId].mes;
-    // if(receivedMesText.indexOf('<ERAMode>') > 0)
-    // {
-    //     updateMesInPage(messageId, "<h>this is a test</h>");
-    // }
+    MMTCallbacks.OnReceivedMessage(messageId, context.chat[messageId]);
 	return true;
 }

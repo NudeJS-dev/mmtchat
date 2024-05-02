@@ -27,4 +27,9 @@ export class MMTUI
     {
         this.AttributeWindow.Setup(attributeData, particularsData);
     }
+
+    UpdateAttributeWindow(attributes, particulars)
+    {
+        this.AttributeWindow.Update(attributes, particulars);
+    }
 }

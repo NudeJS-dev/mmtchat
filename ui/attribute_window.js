@@ -1,3 +1,7 @@
+import { MMTSettings } from "../settings/mmt_settings.js";
+
+const MMT_Settings = MMTSettings.Ins();
+
 export class AttributeWindow
 {
     constructor(root)
@@ -9,9 +13,11 @@ export class AttributeWindow
             position: 'absolute',
             cursor: 'pointer',
             pointerEvents: 'auto',
+            'max-width': '20%',
         })
         .draggable({ containment: this._uiRoot });
         this._uiRoot.append(this._root);
+        MMT_Settings.RegisterOnChangedCallBack(this.ApplyMMTSettings.bind(this));
     }
 
     Setup(attributeData, particularsData)
@@ -29,10 +35,10 @@ export class AttributeWindow
         {
             let groupTitle = attrGroup.GroupName;
             let groupRow = $('<tr></tr>');
-            let groupTitleTh = $('<th colspan="4"></th>')
+            let groupTitleTh = $('<th colspan="2"></th>')
             .css({
                 border: '1px solid white',
-                padding: '4px',
+                padding: '1px',
                 'text-align': 'middle',
                 'color': 'yellow'
             })
@@ -50,22 +56,15 @@ export class AttributeWindow
                     curRow = $('<tr></tr>');
                     attrTable.append(curRow);
                 }
-                let titleTd = $('<td></td>')
+                let attrTd = $('<td></td>')
+                .attr("title", attrTitle)
                 .css({
                     border: '1px solid white',
-                    padding: '8px',
+                    padding: '1px',
                     'text-align': 'left',
                 })
-                .html(attrTitle);
-                curRow.append(titleTd);
-                let valueTd = $('<td></td>')
-                .css({
-                    border: '1px solid white',
-                    padding: '8px',
-                    'text-align': 'right',
-                })
-                .html(attrValue);
-                curRow.append(valueTd);
+                .html(`【${attrTitle}】：${attrValue}`);
+                curRow.append(attrTd);
                 attrIndex++;
             }
         }
@@ -73,10 +72,10 @@ export class AttributeWindow
         {
             let groupTitle = particularGroup.GroupName;
             let groupRow = $('<tr></tr>');
-            let groupTitleTh = $('<th colspan="4"></th>')
+            let groupTitleTh = $('<th colspan="2"></th>')
             .css({
                 border: '1px solid white',
-                padding: '4px',
+                padding: '1px',
                 'text-align': 'middle',
                 'color': 'yellow'
             })
@@ -87,23 +86,36 @@ export class AttributeWindow
             {
                 let row = $('<tr></tr>');
                 attrTable.append(row);
-                let titleTd = $('<td></td>')
+                let particularTd = $('<td colspan="2"></td>')
+                .attr("title", parti.Name)
                 .css({
                     border: '1px solid white',
-                    padding: '8px',
+                    padding: '1px',
                     'text-align': 'left',
                 })
-                .html(parti.Name);
-                row.append(titleTd);
-                let valueTd = $('<td colspan="3"></td>')
-                .css({
-                    border: '1px solid white',
-                    padding: '8px',
-                    'text-align': 'right',
-                })
-                .html("暂无数据");
-                row.append(valueTd);
+                .html(`【${parti.Name}】：${"暂无数据"}`);
+                row.append(particularTd);
             }
+        }
+    }
+
+    ApplyMMTSettings(mmtSettings)
+    {
+        this._root.css({
+            'max-width': `${mmtSettings.era_attribute_window_width}%`,
+            'font-size': `${mmtSettings.era_attribute_font_size}px`,
+        });
+    }
+
+    Update(attributes, particulars)
+    {
+        for(let attr of attributes)
+        {
+            $(`#mmt_attr_table td[title="${attr.Name}"]`).html(`【${attr.Name}】：${attr.Value}`);
+        }
+        for(let particular of particulars)
+        {
+            $(`#mmt_attr_table td[title="${particular.Name}"]`).html(`【${particular.Name}】：${particular.Value}`);
         }
     }
 }
