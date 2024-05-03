@@ -20,6 +20,26 @@ export class AttributeWindow
         MMT_Settings.RegisterOnChangedCallBack(this.ApplyMMTSettings.bind(this));
     }
 
+    OnGroupTitleClicked(groupTitleDiv)
+    {
+        let collapsed = groupTitleDiv.attr("collapsed") == "true";
+        let groupIndex = parseInt(groupTitleDiv.attr("groupIndex"));
+        let groupTitle = groupTitleDiv.attr("groupTitle");
+        let groupRows = $(`#mmt_attr_table tr[groupIndex="${groupIndex}"]`);
+        collapsed = !collapsed;
+        groupTitleDiv.attr("collapsed", collapsed);
+        if(collapsed)
+        {
+            groupRows.hide();
+            groupTitleDiv.html(`${groupTitle}<b style="color: white;">[+]</b>`);
+        }
+        else
+        {
+            groupRows.show();
+            groupTitleDiv.html(`${groupTitle}<b style="color: white;">[-]</b>`);
+        }
+    }
+
     Setup(attributeData, particularsData)
     {
         if(attributeData.length < 1 && particularsData.length < 1) return;
@@ -31,9 +51,15 @@ export class AttributeWindow
             border: '1px solid white',
         });
         this._root.append(attrTable);
+        let groupIndex = 0;
         for(let attrGroup of attributeData)
         {
             let groupTitle = attrGroup.GroupName;
+            let groupTitleDiv = $('<div></div>')
+                .attr("collapsed", false)
+                .attr("groupIndex", groupIndex)
+                .attr("groupTitle", groupTitle)
+                .html(`${groupTitle}<b style="color: white;">[-]</b>`)
             let groupRow = $('<tr></tr>');
             let groupTitleTh = $('<th colspan="2"></th>')
             .css({
@@ -42,7 +68,8 @@ export class AttributeWindow
                 'text-align': 'middle',
                 'color': 'yellow'
             })
-            .html(groupTitle);
+            .append(groupTitleDiv);
+            groupTitleDiv.click(this.OnGroupTitleClicked.bind(this, groupTitleDiv));
             groupRow.append(groupTitleTh);
             attrTable.append(groupRow);
             let attrIndex = 0;
@@ -53,7 +80,8 @@ export class AttributeWindow
                 let attrValue = attr.Value;
                 if(attrIndex % 2 == 0)
                 {
-                    curRow = $('<tr></tr>');
+                    curRow = $('<tr></tr>')
+                    .attr("groupIndex", groupIndex);
                     attrTable.append(curRow);
                 }
                 let attrTd = $('<td></td>')
@@ -67,10 +95,16 @@ export class AttributeWindow
                 curRow.append(attrTd);
                 attrIndex++;
             }
+            groupIndex++;
         }
         for(let particularGroup of particularsData)
         {
             let groupTitle = particularGroup.GroupName;
+            let groupTitleDiv = $('<div></div>')
+                .attr("collapsed", false)
+                .attr("groupIndex", groupIndex)
+                .attr("groupTitle", groupTitle)
+                .html(`${groupTitle}<b style="color: white;">[-]</b>`)
             let groupRow = $('<tr></tr>');
             let groupTitleTh = $('<th colspan="2"></th>')
             .css({
@@ -79,12 +113,14 @@ export class AttributeWindow
                 'text-align': 'middle',
                 'color': 'yellow'
             })
-            .html(groupTitle);
+            .append(groupTitleDiv);
+            groupTitleDiv.click(this.OnGroupTitleClicked.bind(this, groupTitleDiv));
             groupRow.append(groupTitleTh);
             attrTable.append(groupRow);
             for(let parti of particularGroup.Particulars)
             {
-                let row = $('<tr></tr>');
+                let row = $('<tr></tr>')
+                    .attr("groupIndex", groupIndex);
                 attrTable.append(row);
                 let particularTd = $('<td colspan="2"></td>')
                 .attr("title", parti.Name)
@@ -96,6 +132,7 @@ export class AttributeWindow
                 .html(`【${parti.Name}】：${"暂无数据"}`);
                 row.append(particularTd);
             }
+            groupIndex++;
         }
     }
 
