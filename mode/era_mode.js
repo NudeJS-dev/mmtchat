@@ -115,6 +115,11 @@ export class EraMode
         let eraModeText = MMTUtils.GetTagContent('ERAMode', originMes);
         if(eraModeText.length < 1) return;
         let storyText = MMTUtils.GetTagContent('ERA_Assistant_Response', eraModeText);
+        if(storyText.length < 1)
+        {
+            console.log(storyText);
+            return;
+        }
         let saveData = MMTUtils.GetSaveDataInChat0();
         let attrChangeText = MMTUtils.GetTagContent('ERA_Assistant_Attribute_Change', eraModeText).replaceAll('\r', '').replaceAll('\n', '');
         let attrs = [];
