@@ -53,7 +53,7 @@ export class MMTSettings
         {
             return;
         }
-        const settingsHtml = $(await renderExtensionTemplateAsync('third-party/MMTChat', 'html/dropdown', defaultSettings));
+        const settingsHtml = $(await renderExtensionTemplateAsync('third-party/mmtchat', 'html/dropdown', defaultSettings));
         $('#extensions_settings').append(settingsHtml);
         $('#era_attribute_window_width').on('input', this.onEraAttributeWindowWidthInput.bind(this));
         $('#era_attribute_font_size').on('input', this.onEraAttributeFontSizeInput.bind(this));
