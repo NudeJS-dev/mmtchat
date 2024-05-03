@@ -1,5 +1,6 @@
 
 import { MMTMode } from "./mmtmode.js";
+import { MMTUtils } from "./mmtutils.js";
 
 const MMT_Mode = new MMTMode();
 
@@ -21,6 +22,7 @@ function OnBefore_Switch_Send(message, cookieArr)
     tailIndex = uniqueIdCookie.indexOf(';');
     let uniqueId = uniqueIdCookie.substring(0, tailIndex);
     message.mes = `-switch ${uniqueId} ${authorization}`;
+    MMTUtils.AddMMTInfoToMessage(message);
 }
 
 MMTCallbacks.OnSelectCharacter = function(charData)
