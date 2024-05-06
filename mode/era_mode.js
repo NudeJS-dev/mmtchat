@@ -54,7 +54,7 @@ export class EraMode
 
     GatherEraHistory(isRoll)
     {
-        let history = [ `Assistant:\n${this.firstMes}` ];
+        let history = [ `【{{char}}】:\n${this.firstMes}` ];
         let allChat = MMTUtils.GetChat();
         allChat.map((message, index) => {
             if(index > 0 && index < allChat.length - 1)
@@ -62,11 +62,11 @@ export class EraMode
                 if(isRoll && index == allChat.length - 2) return;
                 if(message.is_user)
                 {
-                    history.push(`Human:\n${message.mes}`);
+                    history.push(`【{{user}}】:\n${message.mes}`);
                     return;
                 }
                 let storyText = MMTUtils.GetTagContent('ERA_Story', message.mes);
-                if(storyText.length > 0) history.push(`Assistant:\n${storyText}`);
+                if(storyText.length > 0) history.push(`【{{char}}】:\n${storyText}`);
             }
         });
         return history;
@@ -111,6 +111,7 @@ export class EraMode
 
     OnReceivedMessage(messageId, message)
     {
+        console.log(message.mes);
         let originMes = message.mes;
         let eraModeText = MMTUtils.GetTagContent('ERAMode', originMes);
         if(eraModeText.length < 1) return;
