@@ -1,8 +1,10 @@
 
 import { MMTMode } from "./mmtmode.js";
 import { MMTUtils } from "./mmtutils.js";
+import { MMTTags } from "./mmttags.js";
 
 const MMT_Mode = new MMTMode();
+const MMT_Tags = new MMTTags();
 
 export class MMTCallbacks {};
 
@@ -28,6 +30,7 @@ function OnBefore_Switch_Send(message, cookieArr)
 MMTCallbacks.OnSelectCharacter = function(charData)
 {
     MMT_Mode.OnSelectCharacter(charData);
+    MMT_Tags.OnSelectCharacter(charData);
 }
 
 MMTCallbacks.OnBeforeCommandMessageSend = function(message)
@@ -49,9 +52,11 @@ MMTCallbacks.OnBeforeCommandMessageSend = function(message)
 MMTCallbacks.OnBeforeUserMessageSend = function(message, isRoll)
 {
     MMT_Mode.OnBeforeUserMessageSend(message, isRoll);
+    MMT_Tags.OnBeforeUserMessageSend(message, isRoll);
 }
 
 MMTCallbacks.OnReceivedMessage = function(messageId, message)
 {
     MMT_Mode.OnReceivedMessage(messageId, message);
+    MMT_Tags.OnReceivedMessage(messageId, message);
 }

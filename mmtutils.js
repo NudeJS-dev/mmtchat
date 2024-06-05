@@ -99,11 +99,28 @@ MMTUtils.AddHiddenInfoToMessage = function(message, infoData)
         plainMes = message.mes.substring(0, hiddenIdx).trim();
         hiddenInfoText = message.mes.substring(hiddenIdx + 15);
         let tailIdx = hiddenInfoText.indexOf('-->');
-        hiddenInfoText = hiddenInfoText.substring(0, tailIdx).trim();
+        if(tailIdx > -1) hiddenInfoText = hiddenInfoText.substring(0, tailIdx).trim();
     }
     let hiddenInfo = hiddenInfoText.length > 0 ? JSON.parse(hiddenInfoText) : {};
     hiddenInfo = Object.assign(hiddenInfo, infoData);
     message.mes = `${plainMes}\n<!-- HiddenInfo ${JSON.stringify(hiddenInfo)} -->`;
+}
+
+MMTUtils.GetHiddenInfoFromMessage = function(message)
+{
+    let hiddenIndex = message.mes.indexOf('<!-- HiddenInfo');
+    if(hiddenIndex < 0) return null;
+    let hiddenInfoText = message.mes.substring(hiddenIndex + 15);
+    let tailIdx = hiddenInfoText.indexOf('-->');
+    if(tailIdx < 0) return null;
+    hiddenInfoText = hiddenInfoText.substring(0, tailIdx).trim();
+    let hiddenInfo = {};
+    try
+    {
+        hiddenInfo = JSON.parse(hiddenInfoText);
+    }
+    catch(err) { return null; }
+    return hiddenInfo;
 }
 
 MMTUtils.AddMMTInfoToMessage = function(message)
@@ -143,4 +160,11 @@ MMTUtils.GetChatMessage = function(messageId)
     const context = getContext();
     if(!context || !context.chat || context.chat.length < 1) return null;
     return context.chat[messageId];
+}
+
+MMTUtils.CreateUUID = function()
+{
+    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
 }

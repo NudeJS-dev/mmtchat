@@ -35,7 +35,7 @@ function handleMessageSent(index)
     const message = context.chat[index];
     if(message)
     {
-        MMTUtils.CleanHiddenInfo(message);
+        // MMTUtils.CleanHiddenInfo(message);
         MMTUtils.AddMMTInfoToMessage(message);
     }
     if(message && message.is_user)
@@ -70,7 +70,7 @@ function handleGenerationStart(type, options, dryRun)
     }
     if(message)
     {
-        MMTUtils.CleanHiddenInfo(message);
+        // MMTUtils.CleanHiddenInfo(message);
         MMTUtils.AddMMTInfoToMessage(message);
     }
     if(message && message.is_user)
@@ -92,7 +92,8 @@ function handleReceivedMessage(messageId)
         {
             message.mes = `[MMT]${message.mes.substring(1)}`;
         }
-        MMTUtils.CleanHiddenInfo(message);
+        message.mes = message.mes.replace(/<remove>([\s\S]*?)<\/remove>/g, "");
+        // MMTUtils.CleanHiddenInfo(message);
     });
     MMTCallbacks.OnReceivedMessage(messageId, context.chat[messageId]);
 	return true;
