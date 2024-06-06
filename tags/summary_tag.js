@@ -14,7 +14,6 @@ export class SummaryTag
             if(message.is_user && message.mes.startsWith('<|MMT-Summary|>'))
             {
                 let hiddenInfo = MMTUtils.GetHiddenInfoFromMessage(message);
-                console.log(hiddenInfo);
                 if(!hiddenInfo?.SummaryUuid)
                 {
                     MMTUtils.AddHiddenInfoToMessage(message, { SummaryUuid: MMTUtils.CreateUUID() });
