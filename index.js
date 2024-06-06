@@ -99,6 +99,9 @@ function handleReceivedMessage(messageId)
             message.mes = `[MMT]${message.mes.substring(1)}`;
         }
         message.mes = message.mes.replace(/<remove>([\s\S]*?)<\/remove>/g, "");
+        //去除full标签
+        message.mes = message.mes.replace(/<full>([\s\S]*?)<\/full>/g, "");
+        message.mes = message.mes.replace(/<full>/g, "").replace(/<\/full>/g, "");
         if(!message.mes.startsWith('<|MMT-'))
         {
             MMTUtils.CleanHiddenInfo(message);
